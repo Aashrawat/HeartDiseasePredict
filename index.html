@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heart disease estimate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="mast">
+      <p class="eyebrow">KNN heart model · 918 records · 15 features</p>
+      <h1>Heart disease estimate</h1>
+      <p class="lede">
+        Enter the same clinical fields used to train <code>KNN_heart.pkl</code>.
+        The server encodes them, scales them with <code>scaler.pkl</code>, and compares the result with the five nearest patients.
+      </p>
+    </header>
+
+    <main class="layout">
+      <form id="predict-form" class="card" novalidate>
+        <div class="card-head">
+          <h2>Patient record</h2>
+          <div class="presets">
+            <button type="button" data-preset="low">Lower-risk example</button>
+            <button type="button" data-preset="high">Higher-risk example</button>
+          </div>
+        </div>
+
+        <fieldset>
+          <legend>Person</legend>
+          <div class="grid">
+            <label class="field">
+              <span>Age</span>
+              <input id="Age" name="Age" type="number" min="1" max="120" step="1" required placeholder="54">
+              <small>years</small>
+            </label>
+            <div class="field">
+              <span>Sex</span>
+              <div class="segment" role="radiogroup" aria-label="Sex">
+                <label><input type="radio" name="Sex" value="M" required checked> Male</label>
+                <label><input type="radio" name="Sex" value="F"> Female</label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Resting measures</legend>
+          <div class="grid">
+            <label class="field">
+              <span>Resting blood pressure</span>
+              <input id="RestingBP" name="RestingBP" type="number" min="0" max="300" step="1" required placeholder="130">
+              <small>mm Hg</small>
+            </label>
+            <label class="field">
+              <span>Cholesterol</span>
+              <input id="Cholesterol" name="Cholesterol" type="number" min="0" max="1000" step="1" required placeholder="240">
+              <small>mg/dL</small>
+            </label>
+            <label class="field span-2">
+              <span>Chest pain type</span>
+              <select id="ChestPainType" name="ChestPainType" required>
+                <option value="ASY">ASY — asymptomatic</option>
+                <option value="ATA">ATA — atypical angina</option>
+                <option value="NAP">NAP — non-anginal pain</option>
+                <option value="TA">TA — typical angina</option>
+              </select>
+            </label>
+            <div class="field span-2">
+              <span>Fasting blood sugar above 120 mg/dL</span>
+              <div class="segment" role="radiogroup" aria-label="Fasting blood sugar">
+                <label><input type="radio" name="FastingBS" value="0" checked> No</label>
+                <label><input type="radio" name="FastingBS" value="1"> Yes</label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>ECG and exercise</legend>
+          <div class="grid">
+            <label class="field">
+              <span>Resting ECG</span>
+              <select id="RestingECG" name="RestingECG" required>
+                <option value="Normal">Normal</option>
+                <option value="ST">ST — ST-T abnormality</option>
+                <option value="LVH">LVH — left ventricular hypertrophy</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Maximum heart rate</span>
+              <input id="MaxHR" name="MaxHR" type="number" min="30" max="250" step="1" required placeholder="150">
+              <small>bpm</small>
+            </label>
+            <div class="field">
+              <span>Exercise-induced angina</span>
+              <div class="segment" role="radiogroup" aria-label="Exercise-induced angina">
+                <label><input type="radio" name="ExerciseAngina" value="N" checked> No</label>
+                <label><input type="radio" name="ExerciseAngina" value="Y"> Yes</label>
+              </div>
+            </div>
+            <label class="field">
+              <span>Oldpeak</span>
+              <input id="Oldpeak" name="Oldpeak" type="number" min="-5" max="10" step="0.1" required placeholder="0.0">
+              <small>ST depression</small>
+            </label>
+            <label class="field span-2">
+              <span>ST slope</span>
+              <select id="ST_Slope" name="ST_Slope" required>
+                <option value="Up">Up — upsloping</option>
+                <option value="Flat">Flat</option>
+                <option value="Down">Down — downsloping</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <p id="form-error" class="form-error" hidden></p>
+        <button id="submit" class="submit" type="submit">Estimate risk</button>
+      </form>
+
+      <section id="result" class="card result" aria-live="polite">
+        <p class="eyebrow">Result</p>
+        <h2 id="result-title">Waiting for a record</h2>
+        <p id="result-copy">
+          The estimate is a vote among the five closest rows in the training set. It is a class project model, not a medical diagnosis.
+        </p>
+        <div id="meter-wrap" class="meter-wrap" hidden>
+          <div class="meter" id="meter"><span></span></div>
+          <p id="meter-label" class="meter-label"></p>
+          <ol id="neighbors" class="neighbors" aria-label="Neighbor votes"></ol>
+        </div>
+        <div id="feature-wrap" hidden>
+          <h3>Encoded row passed to the model</h3>
+          <div class="table-scroll">
+            <table id="feature-table"></table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
